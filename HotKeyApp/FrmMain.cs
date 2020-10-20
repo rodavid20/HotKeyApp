@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace HotKeyApp
@@ -27,9 +28,11 @@ namespace HotKeyApp
             InitializeComponent();
 
             int id = 0;     // The id of the hotkey. 
-            RegisterHotKey(this.Handle, id, (int)KeyModifier.None, increaseBrightnessKey.GetHashCode());
+            RegisterHotKey(this.Handle, id, (int)KeyModifier.Alt, increaseBrightnessKey.GetHashCode());
             id = 1;     // The id of the hotkey. 
-            RegisterHotKey(this.Handle, id, (int)KeyModifier.None, decreaseBrightnessKey.GetHashCode());            
+            RegisterHotKey(this.Handle, id, (int)KeyModifier.Alt, decreaseBrightnessKey.GetHashCode());
+            this.notifyIcon.ContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
+            this.notifyIcon.ContextMenuStrip.Items.Add("Exit", null, this.CloseApplication);
         }
 
         protected override void WndProc(ref Message m)
@@ -69,6 +72,8 @@ namespace HotKeyApp
         {
             WindowsSettingsBrightnessController.SetBrightness(tbarBrightness.Value);
             lblBrightness.Text = tbarBrightness.Value.ToString();
+            timer.Stop();
+            timer.Start();
         }
 
         private void FrmMain_Resize(object sender, EventArgs e)
@@ -87,6 +92,7 @@ namespace HotKeyApp
         {
             byte b = WindowsSettingsBrightnessController.GetBrightness();
             ShowForm(b);
+            
         }
 
         private void ShowForm(byte brightness)
@@ -96,11 +102,21 @@ namespace HotKeyApp
             lblBrightness.Text = brightness.ToString();
             this.WindowState = FormWindowState.Normal;
             notifyIcon.Visible = false;
+            timer.Enabled = true;
+            timer.Stop();
+            timer.Start();            
         }
 
-        private void FrmMain_FormClosed(object sender, FormClosedEventArgs e)
+        private void CloseApplication(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            Hide();
+            notifyIcon.Visible = true;
+            timer.Enabled = false;
         }
     }
 }
